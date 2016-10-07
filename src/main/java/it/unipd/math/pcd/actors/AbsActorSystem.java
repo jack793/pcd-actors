@@ -15,7 +15,7 @@
  * <p/>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -40,6 +40,8 @@ package it.unipd.math.pcd.actors;
 import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A map-based implementation of the actor system.
@@ -54,6 +56,14 @@ public abstract class AbsActorSystem implements ActorSystem {
      * Associates every Actor created with an identifier.
      */
     private Map<ActorRef<?>, Actor<?>> actors;
+
+    /**
+    *Viene creato dal costruttore il campo actors come ConcurrentHashMap dove
+    * le chiavi sono rappresentate da un ActorRef
+    */    
+    public AbsActorSystem() {
+        actors = new ConcurrentHashMap<>();
+    }
 
     @Override
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode) {
@@ -80,4 +90,42 @@ public abstract class AbsActorSystem implements ActorSystem {
     }
 
     protected abstract ActorRef createActorReference(ActorMode mode);
+
+
+    /**
+     * Ritorna l'actor associato all'ActorRef passato, altrimenti viene lanciata
+     * un'eccezione NoSuchActorException.
+     * @param ref type ActorRef
+     * @return act type Actor
+     * @throws NoSuchActorException
+     */
+    public Actor<?> find(ActorRef<?> ref) throws NoSuchActorException {
+        Actor act = actors.get(ref);
+        if(act != null)
+            return act;
+        else
+            throw new NoSuchActorException();
+    }
+
+
+    /**
+     * Passato un "Runnable" esso viene eseguito
+     * @param r type Runnable
+     */
+    public abstract void systemExecute(Runnable r);
+
+
+    // Ritorno i riferimenti presenti nell'ActorSystem
+    protected final Set<ActorRef<?>> getMapKeys() {
+        return actors.keySet();
+    }
+
+
+    /**
+     * Rimuove un actor dalla Map
+     * @param actor type ActorRef
+     */
+    protected void remove(ActorRef actor){
+        actors.remove(actor);
+    }
 }
